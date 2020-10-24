@@ -2,13 +2,19 @@ package agh.cs.lab1;
 
 public class World {
     public static void main(String[] args) {
-        System.out.println("Program has started!");
-        Direction[] newArgs = changeToEnum(args);
-        run(newArgs);
-        System.out.println("Program is about to exit.");
+        Vector2d position1 = new Vector2d(1,2);
+        System.out.println(position1);
+        Vector2d position2 = new Vector2d(-2,1);
+        System.out.println(position2);
+        System.out.println(position1.add(position2));
+        System.out.println(MapDirection.NORTH.next());
+        System.out.println(MapDirection.SOUTH.previous());
+        System.out.println(MapDirection.WEST.toUnitVector());
+        System.out.println(MapDirection.EAST);
+
     }
 
-    public static void run(Direction[] args) {
+    public static void run(MoveDirection[] args) {
         for(int i=0; i<args.length; i++) {
             switch(args[i]) {
                 case FORWARD:
@@ -32,21 +38,21 @@ public class World {
         }
     }
 
-    public static Direction[] changeToEnum(String[] args) {
-        Direction[] result = new Direction[ args.length ];
+    public static MoveDirection[] changeToEnum(String[] args) {
+        MoveDirection[] result = new MoveDirection[ args.length ];
         for(int i=0; i<args.length; i++) {
             switch(args[i]) {
                 case "f":
-                    result[i] = Direction.FORWARD;
+                    result[i] = MoveDirection.FORWARD;
                     break;
                 case "b":
-                    result[i] = Direction.BACKWARD;
+                    result[i] = MoveDirection.BACKWARD;
                     break;
                 case "l":
-                    result[i] = Direction.LEFT;
+                    result[i] = MoveDirection.LEFT;
                     break;
                 case "r":
-                    result[i] = Direction.RIGHT;
+                    result[i] = MoveDirection.RIGHT;
                     break;
             }
         }
