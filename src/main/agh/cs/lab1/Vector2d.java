@@ -21,7 +21,7 @@ public class Vector2d {
         return this.x >= other.x && this.y >= other.y;
     }
 
-    public Vector2d upperRight(Vector2d other) {
+    public Vector2d upperRight(Vector2d other) {    // Math.max
         int xmax = this.x >= other.x ? this.x : other.x;
         int ymax = this.y >= other.y ? this.y : other.y;
         return new Vector2d(xmax, ymax);

@@ -1,3 +1,5 @@
+// pakiet jak w kodzie testowanym
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 import agh.cs.lab1.MapDirection;
@@ -8,7 +10,7 @@ public class MapDirectionTest {
         assertTrue(MapDirection.NORTH.next() == MapDirection.EAST &&
            MapDirection.EAST.next() == MapDirection.SOUTH &&
            MapDirection.SOUTH.next() == MapDirection.WEST &&
-           MapDirection.WEST.next() == MapDirection.NORTH);
+           MapDirection.WEST.next() == MapDirection.NORTH); // jeśli ten assert się wysypie, to który kierunek jest winny?
     }
     @Test
     public void testPrevious () {
