@@ -1,6 +1,7 @@
+package agh.cs.lab1;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
-import agh.cs.lab1.MapDirection;
 
 public class MapDirectionTest {
     @Test

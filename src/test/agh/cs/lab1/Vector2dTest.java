@@ -1,6 +1,7 @@
+package agh.cs.lab1;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
-import agh.cs.lab1.Vector2d;
 
 public class Vector2dTest {
     @Test
