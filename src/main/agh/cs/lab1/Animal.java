@@ -27,7 +27,7 @@ public class Animal {
                 break;
         }
         Vector2d newPos = this.position.add(curMove);
-        if(newPos.follows(new Vector2d(0, 0)) && newPos.precedes(new Vector2d(4, 4))) {
+        if(newPos.follows(new Vector2d(0, 0)) && newPos.precedes(new Vector2d(4, 4))) { // czy trzeba tworzyć te wektory co wywołanie?
             this.position = newPos;
         }
     }

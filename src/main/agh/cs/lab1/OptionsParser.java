@@ -5,7 +5,7 @@ public class OptionsParser {
     public static MoveDirection[] parse (String[] args) {
         ArrayList<MoveDirection> directions = new ArrayList<MoveDirection>();
         for (String dir : args) {
-            if (dir == "f" || dir == "forward") {
+            if (dir == "f" || dir == "forward") {   // i to działa? Dla obiektów (z wyjątkiem enumów) trzeba wywoływać .equals()
                 directions.add(MoveDirection.FORWARD);
                 continue;
             }
