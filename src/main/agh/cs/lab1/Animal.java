@@ -4,6 +4,8 @@ public class Animal {
     private MapDirection orientation;
     private Vector2d position;
     private IWorldMap map;
+    private Vector2d lowerLeft = new Vector2d(0, 0);
+    private Vector2d upperRight = new Vector2d(4, 4);
 
     public Animal() {
         this.orientation = MapDirection.NORTH;
@@ -42,7 +44,7 @@ public class Animal {
         Vector2d newPos = this.position.add(curMove);
         if(this.map != null && this.map.canMoveTo(newPos) && !this.map.isOccupied(newPos)) {
             this.position = newPos;
-        } else if(this.map == null && newPos.follows(new Vector2d(0, 0)) && newPos.precedes(new Vector2d(4, 4))) {
+        } else if(this.map == null && newPos.follows(this.lowerLeft) && newPos.precedes(this.upperRight)) {
             this.position = newPos;
         }
     }
