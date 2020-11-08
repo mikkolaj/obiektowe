@@ -1,13 +1,14 @@
 package agh.cs.lab1;
 
+import java.util.Arrays;
+
 public class World {
     public static void main(String[] args) {
-        Animal cat = new Animal();
         MoveDirection[] directions = OptionsParser.parse(args);
-        for (MoveDirection dir : directions) {
-            cat.move(dir);
-            System.out.println(cat.toString());
-        }
+        IWorldMap map = new RectangularMap(10, 5);
+        Vector2d[] positions = { new Vector2d(2,2), new Vector2d(3,4) };
+        IEngine engine = new SimulationEngine(directions, map, positions);
+        engine.run();
     }
 
     public static void run(MoveDirection[] args) {

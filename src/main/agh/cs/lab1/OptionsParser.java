@@ -5,19 +5,19 @@ public class OptionsParser {
     public static MoveDirection[] parse (String[] args) {
         ArrayList<MoveDirection> directions = new ArrayList<MoveDirection>();
         for (String dir : args) {
-            if (dir == "f" || dir == "forward") {
+            if (dir.equals("f") || dir.equals("forward")) {
                 directions.add(MoveDirection.FORWARD);
                 continue;
             }
-            if (dir == "b" || dir == "backward") {
+            if (dir.equals("b") || dir.equals("backward")) {
                 directions.add(MoveDirection.BACKWARD);
                 continue;
             }
-            if (dir == "l" || dir == "left") {
+            if (dir.equals("l") || dir.equals("left")) {
                 directions.add(MoveDirection.LEFT);
                 continue;
             }
-            if (dir == "r" || dir == "right") {
+            if (dir.equals("r") || dir.equals("right")) {
                 directions.add(MoveDirection.RIGHT);
             }
         }

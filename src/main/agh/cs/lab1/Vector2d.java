@@ -1,4 +1,5 @@
 package agh.cs.lab1;
+import java.lang.*;
 
 public class Vector2d {
     public final int x;
@@ -22,14 +23,14 @@ public class Vector2d {
     }
 
     public Vector2d upperRight(Vector2d other) {
-        int xmax = this.x >= other.x ? this.x : other.x;
-        int ymax = this.y >= other.y ? this.y : other.y;
+        int xmax = Math.max(this.x, other.x);
+        int ymax = Math.max(this.y, other.y);
         return new Vector2d(xmax, ymax);
     }
 
     public Vector2d lowerLeft(Vector2d other) {
-        int xmin = this.x <= other.x ? this.x : other.x;
-        int ymin = this.y <= other.y ? this.y : other.y;
+        int xmin = Math.min(this.x, other.x);
+        int ymin = Math.min(this.y, other.y);
         return new Vector2d(xmin, ymin);
     }
 
