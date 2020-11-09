@@ -3,11 +3,11 @@ package agh.cs.lab1;
 public class Animal {
     private MapDirection orientation;
     private Vector2d position;
-    private IWorldMap map;
+    private IWorldMap map;  // może być finalne
     private Vector2d lowerLeft = new Vector2d(0, 0);
     private Vector2d upperRight = new Vector2d(4, 4);
 
-    public Animal() {
+    public Animal() {   // czy ten konstruktor jest poprawny?
         this.orientation = MapDirection.NORTH;
         this.position = new Vector2d(2, 2);
     }

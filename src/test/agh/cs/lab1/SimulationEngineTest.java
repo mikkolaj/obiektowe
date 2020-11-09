@@ -3,7 +3,7 @@ package agh.cs.lab1;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-public class SimulationEngineTest {
+public class SimulationEngineTest { // jedna symulacja wystarcza, żeby uznać klasę za przetestowaną?
     @Test
     public void testRun() {
         RectangularMap map = new RectangularMap(10, 5);

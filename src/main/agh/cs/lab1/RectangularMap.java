@@ -3,9 +3,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 class RectangularMap implements IWorldMap {
-    private int width;
+    private int width;  // te dwa pola nie są używane
     private int height;
-    private Animal[][] map;
+    private Animal[][] map; // a reszta może być finalna
     private ArrayList<Animal> animals;
     private MapVisualizer visualizedMap;
     private Vector2d lowerLeft;
@@ -23,13 +23,13 @@ class RectangularMap implements IWorldMap {
 
     @Override
     public boolean canMoveTo(Vector2d position) {
-        return position.follows(this.lowerLeft) && position.precedes(this.upperRight);
+        return position.follows(this.lowerLeft) && position.precedes(this.upperRight);  // a czy to pole jest wolne?
     }
 
     @Override
     public boolean place(Animal animal) {
         Vector2d position = animal.getPosition();
-        if(this.canMoveTo(position) && this.map[position.y][position.x] == null) {
+        if(this.canMoveTo(position) && this.map[position.y][position.x] == null) {  // DRY - isOccupied
             this.map[position.y][position.x] = animal;
             this.animals.add(animal);
             return true;
@@ -38,7 +38,7 @@ class RectangularMap implements IWorldMap {
     }
 
     @Override
-    public void run(MoveDirection[] directions) {
+    public void run(MoveDirection[] directions) {   // jak Pan ma SimulationEngine, to tej metody w ogóle nie powinno być
         for(int i=0; i < directions.length; i++) {
             Animal curAnimal = this.animals.get(i);
             Vector2d curPos = curAnimal.getPosition();
