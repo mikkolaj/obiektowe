@@ -1,27 +1,27 @@
 package agh.cs.lab1;
 
+import java.util.ArrayList;
+
 public class Animal {
     private MapDirection orientation;
     private Vector2d position;
-    private IWorldMap map;
-    private Vector2d lowerLeft = new Vector2d(0, 0);
-    private Vector2d upperRight = new Vector2d(4, 4);
+    ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
+    final private IWorldMap map;
 
     public Animal() {
-        this.orientation = MapDirection.NORTH;
-        this.position = new Vector2d(2, 2);
+        this(new RectangularMap(5, 5), new Vector2d(2, 2));
     }
 
-    public Animal(IWorldMap map) {
-        this.orientation = MapDirection.NORTH;
-        this.position = new Vector2d(2, 2);
-        this.map = map;
+    public Animal(AbstractWorldMap map) {
+        this(map, new Vector2d(0, 0));
     }
 
-    public Animal(IWorldMap map, Vector2d initialPosition) {
+    public Animal(AbstractWorldMap map, Vector2d initialPosition) {
         this.orientation = MapDirection.NORTH;
         this.position = initialPosition;
         this.map = map;
+        this.map.place(this);
+        this.addObserver(map);
     }
 
     public String toString() {
@@ -42,9 +42,8 @@ public class Animal {
                 break;
         }
         Vector2d newPos = this.position.add(curMove);
-        if(this.map != null && this.map.canMoveTo(newPos) && !this.map.isOccupied(newPos)) {
-            this.position = newPos;
-        } else if(this.map == null && newPos.follows(this.lowerLeft) && newPos.precedes(this.upperRight)) {
+        if(this.map.canMoveTo(newPos)) {
+            this.positionChanged(this.position, newPos);
             this.position = newPos;
         }
     }
@@ -57,8 +56,17 @@ public class Animal {
         return this.position;
     }
 
-    // 10. W naszym programie moglibyśmy trzymać tablicę 2D odpowiadającą kształtem naszej planszy, gdzie trzymalibyśmy
-    //     wartości true/false w zależności, czy dane pole jest już zajęte. Wtedy do metody move należałoby przekazać
-    //     tę tablicę i przed ruszeniem się sprawdzać, czy nie wejdziemy na zajęte pole, oraz aktualizować swoją pozycję
-    //     w tablicy.
+    public void addObserver(IPositionChangeObserver observer) {
+        this.observers.add(observer);
+    }
+
+    public void removeObserver(IPositionChangeObserver observer) {
+        this.observers.remove(observer);
+    }
+
+    private void positionChanged(Vector2d oldPosition, Vector2d newPosition) {
+        for (IPositionChangeObserver observer : this.observers) {
+            observer.positionChanged(oldPosition, newPosition);
+        }
+    }
 }
