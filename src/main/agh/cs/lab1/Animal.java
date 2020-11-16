@@ -20,7 +20,7 @@ public class Animal {
         this.orientation = MapDirection.NORTH;
         this.position = initialPosition;
         this.map = map;
-        this.map.place(this);
+        this.map.place(this);   // jak Pan ma SimulationEngine, to lepiej żeby on dodawał zwierzęta do mapy
         this.addObserver(map);
     }
 

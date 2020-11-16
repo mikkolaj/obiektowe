@@ -4,13 +4,13 @@ import java.util.ArrayList;
 
 public class SimulationEngine implements IEngine {
     private MoveDirection[] directions;
-    private int numOfAnimals;
+    private int numOfAnimals;   // czy to pole jest potrzebne, jak możemy użyć animals.size()?
     private ArrayList<Animal> animals = new ArrayList<>();
 
     public SimulationEngine(MoveDirection[] directions, AbstractWorldMap map, Vector2d[] positions) {
         for (int i = 0; i < positions.length; i++) {
             Animal newAnimal = new Animal(map, positions[i]);
-            animals.add(newAnimal);
+            animals.add(newAnimal); // nie ma żadnej kontroli, czy zwierzę dało się dodać do mapy
         }
 
         this.directions = directions;

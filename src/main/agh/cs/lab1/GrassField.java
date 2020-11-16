@@ -6,7 +6,7 @@ import java.util.Random;
 import java.util.Set;
 
 public class GrassField extends AbstractWorldMap {
-    private Random generator = new Random();
+    private Random generator = new Random();    // to może być finalne
     private final Map<Vector2d,Grass> grassMap = new HashMap<>();
     private Vector2d upperRight = new Vector2d(0, 0);
 
@@ -19,7 +19,7 @@ public class GrassField extends AbstractWorldMap {
             } while (grassMap.get(grassPos) != null);
             Grass newGrass = new Grass(grassPos);
             grassMap.put(grassPos, newGrass);
-            this.visualizedMap = new MapVisualizer(this);
+            this.visualizedMap = new MapVisualizer(this);   // czemu w pętli?
         }
     }
 
@@ -56,12 +56,12 @@ public class GrassField extends AbstractWorldMap {
 
     private void updateCorners(Set<Vector2d> vector2ds) {
         for (Vector2d position : vector2ds) {
-            if(position.x > this.upperRight.x || position.y > this.upperRight.y) {
+            if(position.x > this.upperRight.x || position.y > this.upperRight.y) {  // lepiej operować na całych wektorach, niż pojedynczych współrzędnych
                 this.upperRight = this.upperRight.upperRight(position);
             }
             if(position.x < this.lowerLeft.x || position.y < this.lowerLeft.y) {
                 this.lowerLeft = this.lowerLeft.lowerLeft(position);
             }
-        }
+        }   // mapa się rozszerza, ale nie kurczy
     }
 }

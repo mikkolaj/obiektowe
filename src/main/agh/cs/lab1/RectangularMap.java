@@ -15,7 +15,7 @@ class RectangularMap extends AbstractWorldMap {
         return insideMap(position) && !isOccupied(position);
     }
 
-    public boolean insideMap(Vector2d position) {
+    public boolean insideMap(Vector2d position) {   // lepiej takie metody dodawać jako prywatne
         return position.follows(this.lowerLeft) && position.precedes(this.upperRight);
     }
 
