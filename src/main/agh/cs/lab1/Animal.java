@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Animal {
     private MapDirection orientation;
     private Vector2d position;
-    ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
+    private final ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
     final private IWorldMap map;
 
     public Animal() {
@@ -20,7 +20,6 @@ public class Animal {
         this.orientation = MapDirection.NORTH;
         this.position = initialPosition;
         this.map = map;
-        this.map.place(this);
         this.addObserver(map);
     }
 
@@ -56,11 +55,11 @@ public class Animal {
         return this.position;
     }
 
-    public void addObserver(IPositionChangeObserver observer) {
+    private void addObserver(IPositionChangeObserver observer) {
         this.observers.add(observer);
     }
 
-    public void removeObserver(IPositionChangeObserver observer) {
+    private void removeObserver(IPositionChangeObserver observer) {
         this.observers.remove(observer);
     }
 

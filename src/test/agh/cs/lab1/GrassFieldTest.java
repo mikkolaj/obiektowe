@@ -19,11 +19,13 @@ public class GrassFieldTest {
         assertFalse(field.isOccupied(newPos));
         assertTrue(field.canMoveTo(newPos));
 
-        new Animal(field, newPos);
+        Animal animal1 = new Animal(field, newPos);
+        field.place(animal1);
         assertTrue(field.isOccupied(newPos));
         assertFalse(field.canMoveTo(newPos));
 
-        new Animal(field, grassPos);
+        Animal animal2 = new Animal(field, grassPos);
+        field.place(animal2);
         assertTrue(field.isOccupied(grassPos));
         assertFalse(field.canMoveTo(grassPos));
 
@@ -41,12 +43,32 @@ public class GrassFieldTest {
         assertTrue(field.objectAt(grassPos).equals(grass));
 
         Animal animal1 = new Animal(field, grassPos);
+        field.place(animal1);
         assertTrue(field.objectAt(grassPos).equals(animal1));
 
         Vector2d newPos = grassPos.add(new Vector2d(1, 1));
         assertTrue(field.objectAt(newPos) == null);
         Animal animal2 = new Animal(field, newPos);
+        field.place(animal2);
         assertTrue(field.objectAt(newPos).equals(animal2));
 
+    }
+
+    @Test
+    public void testPlace() {
+        GrassField map = new GrassField(10);
+        Vector2d pos1 = new Vector2d(2, 2);
+        Animal animal1 = new Animal(map, pos1);
+        map.place(animal1);
+        assertTrue(map.objectAt(pos1).equals(animal1));
+
+        Animal animal2 = new Animal(map, pos1);
+        map.place(animal2);
+        assertTrue(map.objectAt(pos1).equals(animal1));
+
+        Vector2d pos2 = new Vector2d(-1, -1);
+        Animal animal3 = new Animal(map, pos2);
+        map.place(animal3);
+        assertTrue(map.objectAt(pos2) != null);
     }
 }

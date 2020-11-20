@@ -29,7 +29,6 @@ public class AnimalTest {
         pet.move(MoveDirection.FORWARD);
         assertTrue(pet.getPosition().equals(new Vector2d(2, 3)));
         pet.move(MoveDirection.BACKWARD);
-        System.out.println(pet.getPosition());
         assertTrue(pet.getPosition().equals(new Vector2d(2, 2)));
         pet.move(MoveDirection.LEFT);
         assertTrue(pet.getPosition().equals(new Vector2d(2, 2)));
@@ -87,18 +86,4 @@ public class AnimalTest {
         assertTrue(Arrays.equals(result, parsed));
     }
 
-    @Test
-    public void testPlace() {
-        RectangularMap map = new RectangularMap(5, 5);
-        Vector2d pos1 = new Vector2d(2, 2);
-        Animal animal1 = new Animal(map, pos1);
-        assertTrue(map.objectAt(pos1).equals(animal1));
-
-        new Animal(map, pos1);
-        assertTrue(map.objectAt(pos1).equals(animal1));
-
-        Vector2d pos2 = new Vector2d(-1, -1);
-        new Animal(map, pos2);
-        assertTrue(map.objectAt(pos2) == null);
-    }
 }

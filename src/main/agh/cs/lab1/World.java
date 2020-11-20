@@ -9,14 +9,6 @@ public class World {
         IEngine engine = new SimulationEngine(directions, map, positions);
         engine.run();
         System.out.println(map);
-
-        // 9. Dodanie interfejsu IMapElement, implementowanego przez Grass i Animal nie pomogłoby wiele w obecnej
-        //    sytuacji. Te klasy mają wspólną jedynie pozycję i metodę, która ją zwraca. Aby zwierzęta mogły stać na
-        //    trawie musielibyśmy dalej mieć dwie hashmapy, żeby klucze (pozycje) się nie pokrywały, więc nie
-        //    uprościlibyśmy tym klasy GrassField.
-
-        // 10. Ponownie nie widzę korzyści z wprowadzania AbstractWorldMapElement ze względu na znikome podobieństwo
-        //     pomiędzy klasami Grass i Animal.
     }
 
     public static void run(MoveDirection[] args) {

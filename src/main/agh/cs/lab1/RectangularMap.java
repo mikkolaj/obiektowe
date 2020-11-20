@@ -1,36 +1,28 @@
 package agh.cs.lab1;
-import java.util.HashMap;
-import java.util.Map;
 
 class RectangularMap extends AbstractWorldMap {
-    private Vector2d upperRight;
-
     public RectangularMap (int width, int height) {
+        this.lowerLeft = new Vector2d(0, 0);
         this.upperRight = new Vector2d(width - 1, height - 1);
-        this.visualizedMap = new MapVisualizer(this);
     }
 
     @Override
     public boolean canMoveTo(Vector2d position) {
-        return insideMap(position) && !isOccupied(position);
+        return insideMap(position) && super.canMoveTo(position);
     }
 
-    public boolean insideMap(Vector2d position) {
+    private boolean insideMap(Vector2d position) {
         return position.follows(this.lowerLeft) && position.precedes(this.upperRight);
     }
 
     @Override
     public boolean isOccupied(Vector2d position) {
-        return this.insideMap(position) && this.objectAt(position) != null;
+        return this.insideMap(position) && super.isOccupied(position);
     }
 
-    @Override
-    public Object objectAt(Vector2d position) {
-        return this.animalMap.get(position);
-    }
 
     @Override
     public String toString() {
-        return this.visualizedMap.draw(this.lowerLeft, this.upperRight);
+        return super.toString(this.lowerLeft, this.upperRight);
     }
 }

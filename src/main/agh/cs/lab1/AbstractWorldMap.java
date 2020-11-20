@@ -4,9 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObserver {
-    protected Vector2d lowerLeft = new Vector2d(0, 0);
-    Map<Vector2d,Animal> animalMap = new HashMap<>();
-    protected MapVisualizer visualizedMap;
+    protected Vector2d lowerLeft;
+    protected Vector2d upperRight;
+    protected final Map<Vector2d,Animal> animalMap = new HashMap<>();
+    protected final MapVisualizer visualizedMap = new MapVisualizer(this);
 
     public boolean place(Animal animal) {
         Vector2d position = animal.getPosition();
@@ -25,8 +26,19 @@ abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObserver {
         }
     }
 
-    abstract public boolean canMoveTo(Vector2d position);
-    abstract public boolean isOccupied(Vector2d position);
-    abstract public Object objectAt(Vector2d position);
-    abstract public String toString();
+    public boolean canMoveTo(Vector2d position) {
+        return this.objectAt(position) == null;
+    }
+
+    public boolean isOccupied(Vector2d position) {
+        return !this.canMoveTo(position);
+    }
+
+    public Object objectAt(Vector2d position) {
+        return this.animalMap.get(position);
+    }
+
+    public String toString(Vector2d lowerLeft, Vector2d upperRight) {
+        return this.visualizedMap.draw(lowerLeft, upperRight);
+    }
 }
