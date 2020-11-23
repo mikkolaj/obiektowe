@@ -8,7 +8,7 @@ public class Animal {
     private final ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
     final private IWorldMap map;
 
-    public Animal() {
+    public Animal() {   // tego konstruktora nie powinno być
         this(new RectangularMap(5, 5), new Vector2d(2, 2));
     }
 
@@ -20,7 +20,7 @@ public class Animal {
         this.orientation = MapDirection.NORTH;
         this.position = initialPosition;
         this.map = map;
-        this.addObserver(map);
+        this.addObserver(map);  // to mapa powinna wyjść z inicjatywą - ona będzie źle działała bez notyfikacji
     }
 
     public String toString() {
@@ -42,7 +42,7 @@ public class Animal {
         }
         Vector2d newPos = this.position.add(curMove);
         if(this.map.canMoveTo(newPos)) {
-            this.positionChanged(this.position, newPos);
+            this.positionChanged(this.position, newPos);    // nazwa sugeruje, że notyfikacja następuje po zmianie pozycji, nie przed
             this.position = newPos;
         }
     }
@@ -55,7 +55,7 @@ public class Animal {
         return this.position;
     }
 
-    private void addObserver(IPositionChangeObserver observer) {
+    private void addObserver(IPositionChangeObserver observer) {    // to powinno być publiczne
         this.observers.add(observer);
     }
 

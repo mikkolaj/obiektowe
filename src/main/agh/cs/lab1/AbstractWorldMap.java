@@ -7,7 +7,7 @@ abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObserver {
     protected Vector2d lowerLeft;
     protected Vector2d upperRight;
     protected final Map<Vector2d,Animal> animalMap = new HashMap<>();
-    protected final MapVisualizer visualizedMap = new MapVisualizer(this);
+    protected final MapVisualizer visualizedMap = new MapVisualizer(this);  // to może być prywatne; nazwa trochę myląca
 
     public boolean place(Animal animal) {
         Vector2d position = animal.getPosition();
@@ -38,7 +38,7 @@ abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObserver {
         return this.animalMap.get(position);
     }
 
-    public String toString(Vector2d lowerLeft, Vector2d upperRight) {
+    public String toString(Vector2d lowerLeft, Vector2d upperRight) {   // nagłówek toString tak nie wygląda
         return this.visualizedMap.draw(lowerLeft, upperRight);
     }
 }

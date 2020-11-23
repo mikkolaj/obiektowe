@@ -23,7 +23,7 @@ public class GrassField extends AbstractWorldMap {
 
     @Override
     public boolean canMoveTo(Vector2d position) {
-        return super.objectAt(position) == null;
+        return super.objectAt(position) == null;    // DRY
     }
 
     @Override
