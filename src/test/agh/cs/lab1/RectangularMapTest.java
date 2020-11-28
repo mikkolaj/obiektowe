@@ -1,6 +1,7 @@
 package agh.cs.lab1;
 
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 public class RectangularMapTest {
@@ -8,7 +9,7 @@ public class RectangularMapTest {
     @Test
     public void testIsOccupied() {
         RectangularMap map = new RectangularMap(5, 5);
-        Vector2d position =  new Vector2d(2, 2);
+        Vector2d position = new Vector2d(2, 2);
         Animal animal = new Animal(map, position);
         map.place(animal);
         assertTrue(map.isOccupied(position));
@@ -40,7 +41,7 @@ public class RectangularMapTest {
     @Test
     public void testObjectAt() {
         RectangularMap map = new RectangularMap(5, 5);
-        Vector2d position =  new Vector2d(2, 2);
+        Vector2d position = new Vector2d(2, 2);
         Animal animal = new Animal(map, position);
         map.place(animal);
         assertTrue(map.objectAt(position).equals(animal));
@@ -57,12 +58,10 @@ public class RectangularMapTest {
         assertTrue(map.objectAt(pos1).equals(animal1));
 
         Animal animal2 = new Animal(map, pos1);
-        map.place(animal2);
-        assertTrue(map.objectAt(pos1).equals(animal1));
+        assertThrows(IllegalArgumentException.class, () -> map.place(animal2));
 
         Vector2d pos2 = new Vector2d(-1, -1);
         Animal animal3 = new Animal(map, pos2);
-        map.place(animal3);
-        assertTrue(map.objectAt(pos2) == null);
+        assertThrows(IllegalArgumentException.class, () -> map.place(animal3));
     }
 }

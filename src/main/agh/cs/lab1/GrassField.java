@@ -3,7 +3,6 @@ package agh.cs.lab1;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 public class GrassField extends AbstractWorldMap {
     private final Random generator = new Random();
@@ -18,12 +17,8 @@ public class GrassField extends AbstractWorldMap {
             } while (grassMap.get(grassPos) != null);
             Grass newGrass = new Grass(grassPos);
             grassMap.put(grassPos, newGrass);
+            this.mapBoundary.addObject(newGrass);
         }
-    }
-
-    @Override
-    public boolean canMoveTo(Vector2d position) {
-        return super.objectAt(position) == null;
     }
 
     @Override
@@ -41,23 +36,7 @@ public class GrassField extends AbstractWorldMap {
         return animal != null ? animal : getGrass(position);
     }
 
-    @Override
-    public String toString() {
-        updateCorners(grassMap.keySet());
-        updateCorners(animalMap.keySet());
-        return super.toString(this.lowerLeft, this.upperRight);
-    }
-
     public Map<Vector2d, Grass> getGrassMap() {
         return grassMap;
-    }
-
-    private void updateCorners(Set<Vector2d> vector2ds) {
-        this.upperRight = new Vector2d(Integer.MIN_VALUE, Integer.MIN_VALUE);
-        this.lowerLeft = new Vector2d(Integer.MAX_VALUE, Integer.MAX_VALUE);
-        for (Vector2d position : vector2ds) {
-            this.upperRight = this.upperRight.upperRight(position);
-            this.lowerLeft = this.lowerLeft.lowerLeft(position);
-        }
     }
 }

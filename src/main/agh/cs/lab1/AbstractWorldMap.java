@@ -4,18 +4,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObserver {
-    protected Vector2d lowerLeft;
-    protected Vector2d upperRight;
     protected final Map<Vector2d,Animal> animalMap = new HashMap<>();
-    protected final MapVisualizer visualizedMap = new MapVisualizer(this);
+    private final MapVisualizer mapVisualizer = new MapVisualizer(this);
+    protected final MapBoundary mapBoundary = new MapBoundary();
 
     public boolean place(Animal animal) {
         Vector2d position = animal.getPosition();
         if(this.canMoveTo(position)) {
             this.animalMap.put(position, animal);
+            this.mapBoundary.addObject(animal);
+            animal.addObserver(this);
             return true;
+        } else {
+            throw new IllegalArgumentException("Animal can't be placed on this field: " + position);
         }
-        return false;
     }
 
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition) {
@@ -27,7 +29,7 @@ abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObserver {
     }
 
     public boolean canMoveTo(Vector2d position) {
-        return this.objectAt(position) == null;
+        return !(this.objectAt(position) instanceof Animal);
     }
 
     public boolean isOccupied(Vector2d position) {
@@ -38,7 +40,7 @@ abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObserver {
         return this.animalMap.get(position);
     }
 
-    public String toString(Vector2d lowerLeft, Vector2d upperRight) {
-        return this.visualizedMap.draw(lowerLeft, upperRight);
+    public String toString() {
+        return this.mapVisualizer.draw(this.mapBoundary.getLowerLeft(), this.mapBoundary.getUpperRight());
     }
 }

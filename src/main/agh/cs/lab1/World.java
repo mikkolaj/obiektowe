@@ -3,12 +3,20 @@ package agh.cs.lab1;
 
 public class World {
     public static void main(String[] args) {
-        MoveDirection[] directions = OptionsParser.parse(args);
-        AbstractWorldMap map = new GrassField(10);
-        Vector2d[] positions = { new Vector2d(2,2), new Vector2d(3,4) };
-        IEngine engine = new SimulationEngine(directions, map, positions);
-        engine.run();
-        System.out.println(map);
+        try {
+//            String[] argumenty = {"l", "r", "zlyarg", "f"};
+            String[] argumenty2 = {"l", "r", "b", "f"};
+            MoveDirection[] directions = OptionsParser.parse(argumenty2);
+            AbstractWorldMap map = new GrassField(10);
+            Vector2d[] positions = {new Vector2d(2, 2), new Vector2d(3, 4), new Vector2d(2, 2)};
+//            Vector2d[] positions2 = {new Vector2d(2, 2), new Vector2d(3, 4)};
+            IEngine engine = new SimulationEngine(directions, map, positions);
+            engine.run();
+            System.out.println(map);
+        } catch (IllegalArgumentException ex) {
+            System.out.println(ex);
+            System.exit(1);
+        }
     }
 
     public static void run(MoveDirection[] args) {

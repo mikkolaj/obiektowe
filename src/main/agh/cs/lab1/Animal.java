@@ -8,10 +8,6 @@ public class Animal {
     private final ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
     final private IWorldMap map;
 
-    public Animal() {
-        this(new RectangularMap(5, 5), new Vector2d(2, 2));
-    }
-
     public Animal(AbstractWorldMap map) {
         this(map, new Vector2d(0, 0));
     }
@@ -20,7 +16,6 @@ public class Animal {
         this.orientation = MapDirection.NORTH;
         this.position = initialPosition;
         this.map = map;
-        this.addObserver(map);
     }
 
     public String toString() {
@@ -42,8 +37,9 @@ public class Animal {
         }
         Vector2d newPos = this.position.add(curMove);
         if(this.map.canMoveTo(newPos)) {
-            this.positionChanged(this.position, newPos);
+            Vector2d oldPos = this.position;
             this.position = newPos;
+            this.positionChanged(oldPos, newPos);
         }
     }
 
@@ -55,11 +51,11 @@ public class Animal {
         return this.position;
     }
 
-    private void addObserver(IPositionChangeObserver observer) {
+    public void addObserver(IPositionChangeObserver observer) {
         this.observers.add(observer);
     }
 
-    private void removeObserver(IPositionChangeObserver observer) {
+    public void removeObserver(IPositionChangeObserver observer) {
         this.observers.remove(observer);
     }
 
