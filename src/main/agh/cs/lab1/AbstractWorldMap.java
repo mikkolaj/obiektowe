@@ -6,7 +6,7 @@ import java.util.Map;
 abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObserver {
     protected final Map<Vector2d,Animal> animalMap = new HashMap<>();
     private final MapVisualizer mapVisualizer = new MapVisualizer(this);
-    protected final MapBoundary mapBoundary = new MapBoundary();
+    protected final MapBoundary mapBoundary = new MapBoundary();    // RectangularMap nie powinno używać MapBoundary
 
     public boolean place(Animal animal) {
         Vector2d position = animal.getPosition();
