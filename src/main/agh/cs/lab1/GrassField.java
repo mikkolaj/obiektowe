@@ -8,31 +8,31 @@ import java.util.stream.Collectors;
 
 public class GrassField implements IWorldMap, IPositionChangeObserver {
     private final Random generator = new Random();
+    private final ArrayList<IFieldChangeObserver> observers = new ArrayList<>();
     private final Map<Vector2d, Grass> grassMap = new HashMap<>();
     private final Multimap<Vector2d, Animal> animalMap = ArrayListMultimap.create();
-    private final MapVisualizer mapVisualizer = new MapVisualizer(this);
+    private final OldMapVisualizer oldMapVisualizer = new OldMapVisualizer(this);
     private final Vector2d mapLowerLeft;
     private final Vector2d mapUpperRight;
     private final Vector2d jungleLowerLeft;
     private final Vector2d jungleUpperRight;
     private final Vector2d jungleSize;
     private final Vector2d mapSize;
-    private final int plantEnergy;
-    private final int startEnergy;
+    public final int moveEnergy;
     private boolean freeSpotJungle = true;
     private boolean freeSpotSavannah = true;
 
-    public GrassField(int width, int height, float jungleRatio, int plantEnergy, int startEnergy) {
+    public GrassField(int width, int height, double jungleRatio, int moveEnergy) {
         Vector2d[] corners = setCorners(width, height);
-        this.mapLowerLeft = corners[0];
-        this.mapUpperRight = corners[1];
+        Vector2d offset = new Vector2d(width / 2, height / 2);
+        this.mapLowerLeft = corners[0].add(offset);
+        this.mapUpperRight = corners[1].add(offset);
         corners = setCorners((int) Math.floor(width * jungleRatio), (int) Math.floor(height * jungleRatio));
-        this.jungleLowerLeft = corners[0];
-        this.jungleUpperRight = corners[1];
+        this.jungleLowerLeft = corners[0].add(offset);
+        this.jungleUpperRight = corners[1].add(offset);
         this.jungleSize = jungleUpperRight.subtract(jungleLowerLeft).add(new Vector2d(1, 1));
         this.mapSize = mapUpperRight.subtract(mapLowerLeft).add(new Vector2d(1, 1));
-        this.plantEnergy = plantEnergy;
-        this.startEnergy = startEnergy;
+        this.moveEnergy = moveEnergy;
     }
 
     private Vector2d[] setCorners(int width, int height) {
@@ -51,6 +51,7 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
         Vector2d position = animal.getPosition();
         if (this.canMoveTo(position)) {
             this.animalMap.put(position, animal);
+            this.fieldChanged(position);
             animal.addObserver(this);
             return true;
         } else {
@@ -66,6 +67,7 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
             } while (this.grassMap.get(grassPos) != null && this.animalMap.get(grassPos) != null);
             Grass newGrass = new Grass(grassPos);
             this.grassMap.put(grassPos, newGrass);
+            this.fieldChanged(grassPos);
         }
         if (freeSpotSavannah) {
             Vector2d grassPos;
@@ -74,6 +76,7 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
             } while (this.grassMap.get(grassPos) != null && this.animalMap.get(grassPos) != null && !this.insideJungle(grassPos));
             Grass newGrass = new Grass(grassPos);
             this.grassMap.put(grassPos, newGrass);
+            this.fieldChanged(grassPos);
         }
     }
 
@@ -83,7 +86,7 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
 
     @Override
     public boolean isOccupied(Vector2d position) {
-        return !this.canMoveTo(position) || this.getGrass(position) != null;
+        return this.objectAt(position) != null;
     }
 
     private Object getGrass(Vector2d position) {
@@ -92,15 +95,42 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
 
     @Override
     public Object objectAt(Vector2d position) {
-        Object animal = this.animalMap.get(position);
-        return animal != null ? animal : getGrass(position);
+        List<Animal> animals = this.animalMap.get(position)
+                .stream()
+                .sorted(Comparator.comparingInt(Animal::getEnergy))
+                .collect(Collectors.toList());
+        return !animals.isEmpty() ? animals.get(0) : getGrass(position);
     }
 
-    public Map<Vector2d, Grass> getGrassMap() {
-        return grassMap;
+    public boolean GrassPresentAt(Vector2d position) {
+        return this.grassMap.containsKey(position);
+    }
+
+    public void removeGrassAt(Vector2d position) {
+        this.grassMap.remove(position);
+        this.fieldChanged(position);
+    }
+
+    public void removeAnimalAt(Vector2d position, Animal animal) {
+        this.animalMap.remove(position, animal);
+        this.fieldChanged(position);
+    }
+
+    public int getNumberOfGrass() {
+        return grassMap.size();
+    }
+
+    public boolean canMoveTo(Vector2d position) {
+        return true;
+    }
+
+    public String toString() {
+        return this.oldMapVisualizer.draw(this.mapLowerLeft, this.mapUpperRight);
     }
 
     public void findFreeSpots() {
+        this.freeSpotJungle = false;
+        this.freeSpotSavannah = false;
         for (int i = this.mapLowerLeft.x; i < this.mapUpperRight.x; i++) {
             for (int j = this.mapLowerLeft.y; j < this.mapUpperRight.y; j++) {
                 Vector2d position = new Vector2d(i, j);
@@ -115,116 +145,55 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
         }
     }
 
-    public void removeDeadAnimals() {
-        this.animalMap.asMap().forEach((key, listOfAnimals) -> listOfAnimals.forEach(animal -> {
-                    if (animal.getEnergy() <= 0) {
-                        // TODO może się krzaczy?
-                        this.animalMap.remove(key, animal);
-                    }
-                }
-        ));
-    }
-
-    public void eatGrass() {
-        this.grassMap.forEach((position, grass) -> {
-            Collection<Animal> listOfAnimals = this.animalMap.get(position);
-            Animal strongestAnimal = listOfAnimals.stream().max(Comparator.comparingInt(Animal::getEnergy)).orElse(null);
-            if (strongestAnimal != null) {
-                List<Animal> strongestAnimals = listOfAnimals.stream().filter(animal1 -> animal1.getEnergy() == strongestAnimal.getEnergy()).collect(Collectors.toList());
-                int energyPerAnimal = this.plantEnergy / strongestAnimals.size();
-                for (Animal animal : strongestAnimals) {
-                    animal.boostEnergy(energyPerAnimal);
-                }
-            }
-        });
-    }
-
-    public void reproduce() {
-        this.grassMap.forEach((position, grass) -> {
-            Collection<Animal> listOfAnimals = this.animalMap.get(position);
-            List<Animal> reproducingAnimals = listOfAnimals.stream().filter(animal -> animal.getEnergy() > 0.5 * this.startEnergy).sorted(Comparator.comparingInt(Animal::getEnergy)).collect(Collectors.toList());
-            int highestEnergy = reproducingAnimals.get(0).getEnergy();
-            int secondHighestEnergy = reproducingAnimals.get(1).getEnergy();
-            List<Animal> drawableAnimals;
-            Animal firstAnimal;
-            Animal secondAnimal;
-            if(highestEnergy == secondHighestEnergy) {
-                int firstAnimalNum;
-                int secondAnimalNum;
-                drawableAnimals = listOfAnimals.stream().filter(animal -> animal.getEnergy() == highestEnergy).collect(Collectors.toList());
-                firstAnimalNum = this.generator.nextInt(drawableAnimals.size());
-                do {
-                    secondAnimalNum = this.generator.nextInt(drawableAnimals.size());
-                } while (secondAnimalNum == firstAnimalNum);
-                firstAnimal = reproducingAnimals.get(firstAnimalNum);
-                secondAnimal = reproducingAnimals.get(secondAnimalNum);
-            } else {
-                firstAnimal = reproducingAnimals.get(0);
-                drawableAnimals = listOfAnimals.stream().filter(animal -> animal.getEnergy() == secondHighestEnergy).collect(Collectors.toList());
-                secondAnimal = reproducingAnimals.get(this.generator.nextInt(drawableAnimals.size()));
-            }
-            List<Vector2d> freePositions = new ArrayList<>();
-            for(int i=-1; i<=1; i++) {
-                for(int j=-1; j<=1; j++) {
-                    if(i != 0 || j != 0) {
-                        Vector2d adjacentPos = this.wrapPositions(new Vector2d(position.x + i, position.y + j));
-                        if(this.objectAt(adjacentPos) == null) {
-                            freePositions.add(adjacentPos);
-                        }
-                    }
-                }
-            }
-            Vector2d childPosition;
-            if(freePositions.size() == 0) {
-                int x = this.generator.nextInt(2) - 1;
-                int y;
-                do {
-                    y = this.generator.nextInt(2) - 1;
-                } while (x == 0 && y == 0);
-                childPosition = this.wrapPositions(new Vector2d(x, y));
-            } else {
-                childPosition = freePositions.get(this.generator.nextInt(freePositions.size()));
-            }
-            Animal child = new Animal(this, childPosition, firstAnimal, secondAnimal);
-            this.place(child);
-        });
-    }
-
     public Vector2d wrapPositions(Vector2d position) {
-        int x = position.x;
-        int y = position.y;
-        if(position.x > this.mapUpperRight.x) {
-            x = this.mapLowerLeft.x;
-        } else if(position.x < this.mapLowerLeft.x) {
-            x = this.mapUpperRight.x;
-        }
-        if(position.y > this.mapUpperRight.y) {
-            y = this.mapLowerLeft.y;
-        } else if(position.y < this.mapLowerLeft.y) {
-            y = this.mapUpperRight.y;
-        }
+        int x = this.wrapPosition(position.x, mapUpperRight.x, mapLowerLeft.x);
+        int y = this.wrapPosition(position.y, mapUpperRight.y, mapLowerLeft.y);
         return new Vector2d(x, y);
+    }
+
+    private int wrapPosition(int position, int upperBound, int lowerBound) {
+        if (position > upperBound) {
+            position = lowerBound;
+        } else if (position < lowerBound) {
+            position = upperBound;
+        }
+        return position;
     }
 
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition) {
         if (!oldPosition.equals(newPosition)) {
             Collection<Animal> listOfAnimals = this.animalMap.get(oldPosition);
-            listOfAnimals.forEach(animal -> {
+            Animal animalToReposition = null;
+            for (Animal animal : listOfAnimals) {
                 if (animal.getPosition().equals(newPosition)) {
-                    this.animalMap.remove(oldPosition, animal);
-                    this.animalMap.put(newPosition, animal);
+                    animalToReposition = animal;
                 }
-            });
+            }
+            if (animalToReposition != null) {
+                this.animalMap.remove(oldPosition, animalToReposition);
+                this.animalMap.put(newPosition, animalToReposition);
+                this.fieldChanged(oldPosition);
+                this.fieldChanged(newPosition);
+            }
         }
     }
 
-    public boolean canMoveTo(Vector2d position) {
-        return !(this.objectAt(position) instanceof Animal);
+
+    public void addObserver(IFieldChangeObserver observer) {
+        this.observers.add(observer);
     }
 
+    public void removeObserver(IFieldChangeObserver observer) {
+        this.observers.remove(observer);
+    }
 
+    private void fieldChanged(Vector2d position) {
+        for (IFieldChangeObserver observer : this.observers) {
+            observer.fieldChanged(position);
+        }
+    }
 
-    public String toString() {
-        return this.mapVisualizer.draw(this.mapLowerLeft, this.mapUpperRight);
+    public Vector2d getMapSize() {
+        return this.mapSize;
     }
 }

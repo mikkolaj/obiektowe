@@ -1,10 +1,11 @@
-//package agh.cs.lab1;
+package agh.cs.lab1;//package agh.cs.lab1;
 //
 //import java.util.Iterator;
 //import java.util.SortedSet;
 //import java.util.TreeSet;
 //
 //public class MapBoundary implements IPositionChangeObserver {
+      // TODO dobry pomysł to IWorldMapElement zamiast Object
 //    private final SortedSet<Object> yObjects = new TreeSet<>((obj1, obj2) -> {
 //        Vector2d pos1 = getObjPos(obj1);
 //        Vector2d pos2 = getObjPos(obj2);
@@ -63,6 +64,7 @@
 //        return pos1.upperRight(pos2);
 //    }
 //
+      // TODO przeciążenie metody na animala i trawę
 //    public void addObject(Object obj) {
 //        this.xObjects.add(obj);
 //        this.yObjects.add(obj);

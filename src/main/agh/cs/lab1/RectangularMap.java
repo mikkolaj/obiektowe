@@ -1,4 +1,4 @@
-//package agh.cs.lab1;
+package agh.cs.lab1;//package agh.cs.lab1;
 //
 //class RectangularMap extends AbstractWorldMap {
 //    private final Vector2d lowerLeft;

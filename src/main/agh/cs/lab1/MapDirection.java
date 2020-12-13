@@ -11,44 +11,53 @@ public enum MapDirection {
     NORTH_WEST;
 
     public String toString() {
-        switch(this) {
-            case NORTH: return "^";
-            case NORTH_EAST: return "/^";
-            case EAST: return ">";
-            case SOUTH_EAST: return "\\v";
-            case SOUTH: return "v";
-            case SOUTH_WEST: return "v/";
-            case WEST: return "<";
-            case NORTH_WEST: return "^\\";
-            default: return null;
-        }
+        return switch (this) {
+            case NORTH -> "^";
+            case NORTH_EAST -> "/^";
+            case EAST -> ">";
+            case SOUTH_EAST -> "\\v";
+            case SOUTH -> "v";
+            case SOUTH_WEST -> "v/";
+            case WEST -> "<";
+            case NORTH_WEST -> "^\\";
+        };
+    }
+    public String toFilename() {
+        return switch (this) {
+            case NORTH -> "n";
+            case NORTH_EAST -> "ne";
+            case EAST -> "e";
+            case SOUTH_EAST -> "se";
+            case SOUTH -> "s";
+            case SOUTH_WEST -> "sw";
+            case WEST -> "w";
+            case NORTH_WEST -> "nw";
+        };
     }
 
     public MapDirection next() {
-        switch(this) {
-            case NORTH: return NORTH_EAST;
-            case NORTH_EAST: return EAST;
-            case EAST: return SOUTH_EAST;
-            case SOUTH_EAST: return SOUTH;
-            case SOUTH: return SOUTH_WEST;
-            case SOUTH_WEST: return WEST;
-            case WEST: return NORTH_WEST;
-            case NORTH_WEST: return NORTH;
-            default: return null;
-        }
+        return switch (this) {
+            case NORTH -> NORTH_EAST;
+            case NORTH_EAST -> EAST;
+            case EAST -> SOUTH_EAST;
+            case SOUTH_EAST -> SOUTH;
+            case SOUTH -> SOUTH_WEST;
+            case SOUTH_WEST -> WEST;
+            case WEST -> NORTH_WEST;
+            case NORTH_WEST -> NORTH;
+        };
     }
 
     public Vector2d toUnitVector() {
-        switch(this) {
-            case NORTH: return new Vector2d(0, 1);
-            case NORTH_EAST: return new Vector2d(1, 1);
-            case EAST: return new Vector2d(1, 0);
-            case SOUTH_EAST: return new Vector2d(1, -1);
-            case SOUTH: return new Vector2d(0, -1);
-            case SOUTH_WEST: return new Vector2d(-1, -1);
-            case WEST: return new Vector2d(-1, 0);
-            case NORTH_WEST: return new Vector2d(-1, 1);
-            default: return null;
-        }
+        return switch (this) {
+            case NORTH -> new Vector2d(0, 1);
+            case NORTH_EAST -> new Vector2d(1, 1);
+            case EAST -> new Vector2d(1, 0);
+            case SOUTH_EAST -> new Vector2d(1, -1);
+            case SOUTH -> new Vector2d(0, -1);
+            case SOUTH_WEST -> new Vector2d(-1, -1);
+            case WEST -> new Vector2d(-1, 0);
+            case NORTH_WEST -> new Vector2d(-1, 1);
+        };
     }
 }

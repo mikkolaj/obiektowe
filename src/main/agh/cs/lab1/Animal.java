@@ -1,51 +1,78 @@
 package agh.cs.lab1;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Animal {
     private MapDirection orientation;
     private Vector2d position;
     private int energy;
     private final int[] genes = new int[32];
-    private final float[] probs = new float[8];
     private final ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
-    final private IWorldMap map;
+    final private GrassField map;
 
-    public Animal(IWorldMap map, Vector2d initialPosition) {
+    public Animal(GrassField map, Vector2d initialPosition, int startEnergy) {
         Random generator = new Random();
         this.orientation = MapDirection.NORTH;
         this.position = initialPosition;
         this.map = map;
-        this.energy = 100;
+        this.energy = startEnergy;
         for (int i = 0; i < 32; i++) {
             this.genes[i] = generator.nextInt(8);
         }
-        countProbs();
+        this.fixGenes(generator);
     }
 
     // dwie grupy mają być losowane
-    public Animal(IWorldMap map, Vector2d initialPosition, Animal strongerAnimal, Animal weakerAnimal) {
+    public Animal(GrassField map, Vector2d initialPosition, Animal strongerAnimal, Animal weakerAnimal) {
         this.orientation = MapDirection.NORTH;
         this.position = initialPosition;
         this.map = map;
-        setGenes(strongerAnimal.genes, weakerAnimal.genes);
-        countProbs();
+        this.setGenes(strongerAnimal.genes, weakerAnimal.genes);
+        this.fixGenes(new Random());
+        int strongerEnergy = (int) Math.ceil(1.0 * strongerAnimal.energy / 4);
+        int weakerEnergy = (int) Math.ceil(1.0 * weakerAnimal.energy / 4);
+        strongerAnimal.energy -= strongerEnergy;
+        weakerAnimal.energy -= weakerEnergy;
+        this.energy = strongerEnergy + weakerEnergy;
+    }
+
+    private void fixGenes(Random generator) {
+        List<Integer> listOfGenes = new ArrayList<Integer>(this.genes.length);
+        for (int i : this.genes) {
+            listOfGenes.add(i);
+        }
+        for (int i = 0; i < 8; i++) {
+            if (!listOfGenes.contains(i)) {
+                int position;
+                do {
+                    position = generator.nextInt(32);
+                } while (Collections.frequency(listOfGenes, listOfGenes.get(position)) < 2);
+                listOfGenes.remove(position);
+                listOfGenes.add(i, position);
+            }
+        }
+        for (int i = 0; i < 32; i++) {
+            this.genes[i] = listOfGenes.get(i);
+        }
+        Arrays.sort(this.genes);
     }
 
     private void setGenes(int[] strongerGenes, int[] weakerGenes) {
         Random generator = new Random();
         int firstDivider = generator.nextInt(30);
-        int secondDivider = firstDivider + 1 + generator.nextInt(30 - firstDivider);
+        int secondDivider;
+        if (firstDivider == 29) {
+            secondDivider = 30;
+        } else {
+            secondDivider = firstDivider + 1 + generator.nextInt(29 - firstDivider);
+        }
         int weakerPart = generator.nextInt(3);
         if (weakerPart == 0) {
-            copyGenes(strongerGenes, weakerGenes, 0, firstDivider, firstDivider + 1, secondDivider, secondDivider + 1, 32);
+            copyGenes(strongerGenes, weakerGenes, 0, firstDivider, firstDivider + 1, secondDivider, secondDivider + 1, 31);
         } else if (weakerPart == 2) {
-            copyGenes(strongerGenes, weakerGenes, secondDivider + 1, 32, 0, firstDivider, firstDivider + 1, secondDivider);
+            copyGenes(strongerGenes, weakerGenes, secondDivider + 1, 31, 0, firstDivider, firstDivider + 1, secondDivider);
         } else {
-            copyGenes(strongerGenes, weakerGenes, firstDivider + 1, secondDivider, 0, firstDivider, secondDivider + 1, 32);
+            copyGenes(strongerGenes, weakerGenes, firstDivider + 1, secondDivider, 0, firstDivider, secondDivider + 1, 31);
         }
 
     }
@@ -62,26 +89,9 @@ public class Animal {
         }
     }
 
-    private void countProbs() {
-        for (int i : this.genes) {
-            this.probs[i] += 1;
-        }
-        for (int i = 0; i < this.probs.length; i++) {
-            this.probs[i] /= 32;
-        }
-    }
-
     private int selectTurn() {
         Random generator = new Random();
-        int number = generator.nextInt(100);
-        float curProb = 0;
-        for (int i=0; i<8; i++) {
-            curProb += this.probs[i];
-            if (curProb * 100 > number) {
-                return i;
-            }
-        }
-        return 7;
+        return this.genes[generator.nextInt(32)];
     }
 
     public String toString() {
@@ -90,16 +100,16 @@ public class Animal {
 
     public void move() {
         int turn = selectTurn();
-        System.out.println(turn);
-        for(int i=0; i<turn; i++) {
+        for (int i = 0; i < turn; i++) {
             this.orientation = this.orientation.next();
         }
         Vector2d curMove = this.orientation.toUnitVector();
-        Vector2d newPos = this.position.add(curMove);
+        Vector2d newPos = this.map.wrapPositions(this.position.add(curMove));
         if (this.map.canMoveTo(newPos)) {
             Vector2d oldPos = this.position;
             this.position = newPos;
             this.positionChanged(oldPos, newPos);
+            this.energy -= this.map.moveEnergy;
         }
     }
 
@@ -130,8 +140,12 @@ public class Animal {
     }
 
     public void boostEnergy(int value) {
-        if(value >= 0)
+        if (value >= 0)
             this.energy += value;
+    }
+
+    public int[] getGenes() {
+        return this.genes;
     }
 
     @Override
