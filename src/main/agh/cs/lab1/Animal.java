@@ -3,12 +3,15 @@ package agh.cs.lab1;
 import java.util.*;
 
 public class Animal {
+    private static final int GENOTYPE_LENGTH = 32;
     private MapDirection orientation;
     private Vector2d position;
     private int energy;
-    private final int[] genes = new int[32];
+    private final List<Integer> genes = new ArrayList<>(GENOTYPE_LENGTH);
     private final ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
     final private GrassField map;
+    private int daysLived = 0;
+    private int children = 0;
 
     public Animal(GrassField map, Vector2d initialPosition, int startEnergy) {
         Random generator = new Random();
@@ -16,10 +19,11 @@ public class Animal {
         this.position = initialPosition;
         this.map = map;
         this.energy = startEnergy;
-        for (int i = 0; i < 32; i++) {
-            this.genes[i] = generator.nextInt(8);
+        for (int i = 0; i < GENOTYPE_LENGTH; i++) {
+            this.genes.add(generator.nextInt(8));
         }
         this.fixGenes(generator);
+        this.map.fieldChanged(initialPosition);
     }
 
     // dwie grupy mają być losowane
@@ -33,65 +37,60 @@ public class Animal {
         int weakerEnergy = (int) Math.ceil(1.0 * weakerAnimal.energy / 4);
         strongerAnimal.energy -= strongerEnergy;
         weakerAnimal.energy -= weakerEnergy;
+        strongerAnimal.children += 1;
+        weakerAnimal.children += 1;
         this.energy = strongerEnergy + weakerEnergy;
+        this.map.fieldChanged(initialPosition);
     }
 
     private void fixGenes(Random generator) {
-        List<Integer> listOfGenes = new ArrayList<Integer>(this.genes.length);
-        for (int i : this.genes) {
-            listOfGenes.add(i);
-        }
         for (int i = 0; i < 8; i++) {
-            if (!listOfGenes.contains(i)) {
+            if (!this.genes.contains(i)) {
                 int position;
                 do {
-                    position = generator.nextInt(32);
-                } while (Collections.frequency(listOfGenes, listOfGenes.get(position)) < 2);
-                listOfGenes.remove(position);
-                listOfGenes.add(i, position);
+                    position = generator.nextInt(GENOTYPE_LENGTH);
+                } while (Collections.frequency(this.genes, this.genes.get(position)) < 2);
+                this.genes.remove(position);
+                this.genes.add(position, i);
             }
         }
-        for (int i = 0; i < 32; i++) {
-            this.genes[i] = listOfGenes.get(i);
-        }
-        Arrays.sort(this.genes);
+        this.genes.sort(Integer::compareTo);
     }
 
-    private void setGenes(int[] strongerGenes, int[] weakerGenes) {
+    private void setGenes(List<Integer> strongerGenes, List<Integer> weakerGenes) {
         Random generator = new Random();
-        int firstDivider = generator.nextInt(30);
+        int firstDivider = generator.nextInt(GENOTYPE_LENGTH - 2);
         int secondDivider;
-        if (firstDivider == 29) {
-            secondDivider = 30;
+        if (firstDivider == GENOTYPE_LENGTH - 3) {
+            secondDivider = GENOTYPE_LENGTH - 2;
         } else {
-            secondDivider = firstDivider + 1 + generator.nextInt(29 - firstDivider);
+            secondDivider = firstDivider + 1 + generator.nextInt(GENOTYPE_LENGTH - 3 - firstDivider);
         }
         int weakerPart = generator.nextInt(3);
         if (weakerPart == 0) {
-            copyGenes(strongerGenes, weakerGenes, 0, firstDivider, firstDivider + 1, secondDivider, secondDivider + 1, 31);
+            copyGenes(strongerGenes, weakerGenes, 0, firstDivider, firstDivider + 1, secondDivider, secondDivider + 1, GENOTYPE_LENGTH - 1);
         } else if (weakerPart == 2) {
-            copyGenes(strongerGenes, weakerGenes, secondDivider + 1, 31, 0, firstDivider, firstDivider + 1, secondDivider);
+            copyGenes(strongerGenes, weakerGenes, secondDivider + 1, GENOTYPE_LENGTH - 1, 0, firstDivider, firstDivider + 1, secondDivider);
         } else {
-            copyGenes(strongerGenes, weakerGenes, firstDivider + 1, secondDivider, 0, firstDivider, secondDivider + 1, 31);
+            copyGenes(strongerGenes, weakerGenes, firstDivider + 1, secondDivider, 0, firstDivider, secondDivider + 1, GENOTYPE_LENGTH - 1);
         }
-
     }
 
-    private void copyGenes(int[] strongerGenes, int[] weakerGenes, int weakerBeg, int weakerEnd, int strongerBeg1, int strongerEnd1, int strongerBeg2, int strongerEnd2) {
+    private void copyGenes(List<Integer> strongerGenes, List<Integer> weakerGenes, int weakerBeg, int weakerEnd, int strongerBeg1, int strongerEnd1, int strongerBeg2, int strongerEnd2) {
         for (int i = weakerBeg; i <= weakerEnd; i++) {
-            this.genes[i] = weakerGenes[i];
+            this.genes.add(weakerGenes.get(i));
         }
-        for (int i = strongerBeg1; i < strongerEnd1; i++) {
-            this.genes[i] = strongerGenes[i];
+        for (int i = strongerBeg1; i <= strongerEnd1; i++) {
+            this.genes.add(strongerGenes.get(i));
         }
         for (int i = strongerBeg2; i <= strongerEnd2; i++) {
-            this.genes[i] = strongerGenes[i];
+            this.genes.add(strongerGenes.get(i));
         }
     }
 
     private int selectTurn() {
         Random generator = new Random();
-        return this.genes[generator.nextInt(32)];
+        return this.genes.get(generator.nextInt(GENOTYPE_LENGTH));
     }
 
     public String toString() {
@@ -106,10 +105,11 @@ public class Animal {
         Vector2d curMove = this.orientation.toUnitVector();
         Vector2d newPos = this.map.wrapPositions(this.position.add(curMove));
         if (this.map.canMoveTo(newPos)) {
+            this.daysLived += 1;
             Vector2d oldPos = this.position;
             this.position = newPos;
-            this.positionChanged(oldPos, newPos);
             this.energy -= this.map.moveEnergy;
+            this.positionChanged(oldPos, newPos);
         }
     }
 
@@ -144,8 +144,16 @@ public class Animal {
             this.energy += value;
     }
 
-    public int[] getGenes() {
+    public List<Integer> getGenes() {
         return this.genes;
+    }
+
+    public int getChildren() {
+        return this.children;
+    }
+
+    public int getDaysLived() {
+        return this.daysLived;
     }
 
     @Override

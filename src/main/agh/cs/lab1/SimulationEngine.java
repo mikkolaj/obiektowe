@@ -2,83 +2,117 @@ package agh.cs.lab1;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class SimulationEngine implements IEngine {
-    private final int roundCount;
+    private final static int ROUND_DELAY = 40;
     private final Multimap<Vector2d, Animal> animalMap = ArrayListMultimap.create();
     private final GrassField map;
-    private final int plantEnergy = 10;
-    private final int startEnergy = 100;
+    private final int plantEnergy;
+    private final int startEnergy;
     private final Random generator = new Random();
-    //    private final SortedSet
-    private int deadAnimals;
+    private final SimulationStatistics stats;
+    private volatile boolean isPaused = false;
+    private final SimulationVisualizer simulationVisualizer;
+    private final int moveDelay;
 
 
-    public SimulationEngine(Stage primaryStage, int roundCount, GrassField map, Vector2d[] positions, int startEnergy) {
+    public SimulationEngine(Stage primaryStage, GrassField map, int numberOfAnimals, int startEnergy, int plantEnergy,
+                            int moveDelay) {
         Vector2d mapSize = map.getMapSize();
-        MapVisualizer mapVisualizer = new MapVisualizer(map, mapSize.x, mapSize.y);
-        primaryStage.setTitle("Simulation");
-        primaryStage.setScene(new Scene(mapVisualizer.createContent(), 800, 600));
-        primaryStage.show();
 
-        for (int i = 0; i < positions.length; i++) {
-            Animal newAnimal = new Animal(map, positions[i], startEnergy);
+        this.stats = new SimulationStatistics(this, map);
+        this.simulationVisualizer = new SimulationVisualizer(primaryStage, this,
+                this.stats, map, mapSize.x, mapSize.y, startEnergy);
+
+        List<Vector2d> positions = this.drawInitialPositions(numberOfAnimals, mapSize);
+
+        for (Vector2d position : positions) {
+            Animal newAnimal = new Animal(map, position, startEnergy);
             map.place(newAnimal);
-            animalMap.put(positions[i], newAnimal);
+            this.animalMap.put(position, newAnimal);
+            this.stats.animalPlaced(newAnimal);
         }
 
-
         this.map = map;
-        this.roundCount = roundCount;
+        this.moveDelay = moveDelay;
+        this.startEnergy = startEnergy;
+        this.plantEnergy = plantEnergy;
     }
 
     @Override
     public void run() {
+        // new Thread not to block refreshing of the GUI
         new Thread(() -> {
-            for (int i = 0; i < roundCount; i += 1) {
+            while (true) {
+                this.simulationVisualizer.updateVisualizer();
+                // wait for user input to resume the simulation
+                while (isPaused) {
+                    Thread.onSpinWait();
+                }
+                // for each animal, move it and update its position on the map
                 List<Animal> values = new ArrayList<>(this.animalMap.values());
                 for (Animal animal : values) {
-                    System.out.println(this.map);
                     Vector2d oldPos = animal.getPosition();
                     animal.move();
-                    System.out.println(this.map);
                     Vector2d newPos = animal.getPosition();
                     this.animalMap.remove(oldPos, animal);
                     this.animalMap.put(newPos, animal);
                     try {
-                        Thread.sleep(20);
+                        Thread.sleep(moveDelay);
                     } catch (InterruptedException ex) {
                         ex.printStackTrace();
                     }
                 }
+                // normal cycle of the day
                 this.removeDeadAnimals();
                 this.eatGrass();
                 this.reproduce();
-                map.findFreeSpots();
-                map.placeGrass();
+                this.map.findFreeSpots();
+                this.map.placeGrass();
+
+                // inform our Statistics class about the end of the day
+                this.stats.dayHasPassed();
+                try {
+                    Thread.sleep(ROUND_DELAY);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
             }
-            System.out.println(this.map);
         }).start();
+    }
+
+    private List<Vector2d> drawInitialPositions(int number, Vector2d mapSize) {
+        Random generator = new Random();
+        List<Vector2d> positions = new ArrayList<>();
+        do {
+            int x = generator.nextInt(mapSize.x);
+            int y = generator.nextInt(mapSize.y);
+            Vector2d position = new Vector2d(x, y);
+            if (!positions.contains(position)) {
+                positions.add(position);
+            }
+        } while (positions.size() < number);
+        return positions;
     }
 
     private void eatGrass() {
         ArrayList<Vector2d> grassToRemove = new ArrayList<>();
+
+        // check each position on the map taken by animals, and feed strongest of them (dividing the energy
+        // if there is a need to)
         this.animalMap.asMap().forEach((position, listOfAnimals) -> {
-            if (this.map.GrassPresentAt(position)) {
+            if (this.map.grassPresentAt(position)) {
                 Animal strongestAnimal = listOfAnimals.stream().max(Comparator.comparingInt(Animal::getEnergy)).orElse(null);
                 if (strongestAnimal != null) {
                     grassToRemove.add(position);
                     List<Animal> strongestAnimals = listOfAnimals.stream().filter(animal1 -> animal1.getEnergy() == strongestAnimal.getEnergy()).collect(Collectors.toList());
                     int energyPerAnimal = this.plantEnergy / strongestAnimals.size();
                     for (Animal animal : strongestAnimals) {
-                        System.out.print(animal.getEnergy() + " -> ");
                         animal.boostEnergy(energyPerAnimal);
-                        System.out.print(animal.getEnergy() + "\n");
                     }
                 }
             }
@@ -91,6 +125,8 @@ public class SimulationEngine implements IEngine {
     private void removeDeadAnimals() {
         ArrayList<Vector2d> deadAnimalsKeys = new ArrayList<>();
         ArrayList<Animal> deadAnimals = new ArrayList<>();
+
+        // If an animal has energy level of 0 it's dead
         this.animalMap.asMap().forEach((key, listOfAnimals) -> listOfAnimals.forEach(animal -> {
                     if (animal.getEnergy() <= 0) {
                         deadAnimalsKeys.add(key);
@@ -98,61 +134,56 @@ public class SimulationEngine implements IEngine {
                     }
                 }
         ));
+
         for (int i = 0; i < deadAnimals.size(); i++) {
             Vector2d animalsPosition = deadAnimalsKeys.get(i);
             Animal animalToRemove = deadAnimals.get(i);
             this.animalMap.remove(animalsPosition, animalToRemove);
             this.map.removeAnimalAt(animalsPosition, animalToRemove);
+            this.stats.animalDied(animalToRemove);
         }
     }
 
-    private void printStats() {
-        System.out.println("Liczba zwierząt " + this.animalMap.values().size());
-        System.out.println("Liczba traw: " + this.map.getNumberOfGrass());
-
+    public void pauseSimulation() {
+        this.isPaused = true;
     }
 
-    private void genes() {
-        final List<int[]> genotypes = new ArrayList<>();
-        this.animalMap.values().forEach(animal -> genotypes.add(animal.getGenes()));
-        Set<int[]> uniqGenotypes = new TreeSet<>((obj1, obj2) -> {
-            if(Arrays.equals(obj1, obj2)) {
-                return 0;
-            } else {
-                for (int i=0; i<obj1.length; i++) {
-                    if (obj1[i] < obj2[i]) {
-                        return -1;
-                    } else if (obj1[i] > obj2[i]) {
-                        return 1;
-                    }
-                }
-                return 1;
-            }
-        });
-        uniqGenotypes.addAll(genotypes);
-        List<int[]> uniqGenotypesList = new ArrayList<>(uniqGenotypes);
-        List<Integer> genOccurences = new ArrayList<>();
-        for(int i=0; i<uniqGenotypesList.size(); i++) {
-            int finalI = i;
-            genOccurences.add(Math.toIntExact(genotypes.stream().filter(genotype -> Arrays.equals(genotype, uniqGenotypesList.get(finalI))).count()));
-        }
+    public void resumeSimulation() {
+        this.isPaused = false;
+    }
 
+    public boolean isSimulationPaused() {
+        return this.isPaused;
+    }
+
+    public Collection<Animal> getAllAnimals() {
+        return this.animalMap.values();
     }
 
     private void reproduce() {
         ArrayList<Animal> animalsToPlace = new ArrayList<>();
+
         this.animalMap.asMap().forEach((position, listOfAnimals) -> {
-            List<Animal> reproducingAnimals = listOfAnimals.stream().filter(animal -> animal.getEnergy() > 0.5 * this.startEnergy).sorted(Comparator.comparingInt(Animal::getEnergy)).collect(Collectors.toList());
+            // animal is able to reproduce if its current energy level is greater than half of the start energy for
+            // first animals
+
+            List<Animal> reproducingAnimals = listOfAnimals.stream().filter(animal -> animal.getEnergy() >= 0.5 * this.startEnergy).sorted(Comparator.comparingInt(Animal::getEnergy)).collect(Collectors.toList());
+
+            // at least 2 animals are needed
             if (reproducingAnimals.size() > 1) {
                 int highestEnergy = reproducingAnimals.get(0).getEnergy();
                 int secondHighestEnergy = reproducingAnimals.get(1).getEnergy();
                 List<Animal> drawableAnimals;
                 Animal firstAnimal;
                 Animal secondAnimal;
+
+                // if 2 or more animals on the same position have the highest number of energy, we draw 2 of them
                 if (highestEnergy == secondHighestEnergy) {
                     int firstAnimalNum;
                     int secondAnimalNum;
-                    drawableAnimals = listOfAnimals.stream().filter(animal -> animal.getEnergy() == highestEnergy).collect(Collectors.toList());
+                    drawableAnimals = listOfAnimals.stream()
+                            .filter(animal -> animal.getEnergy() == highestEnergy)
+                            .collect(Collectors.toList());
                     firstAnimalNum = this.generator.nextInt(drawableAnimals.size());
                     do {
                         secondAnimalNum = this.generator.nextInt(drawableAnimals.size());
@@ -160,13 +191,17 @@ public class SimulationEngine implements IEngine {
                     firstAnimal = reproducingAnimals.get(firstAnimalNum);
                     secondAnimal = reproducingAnimals.get(secondAnimalNum);
                 } else {
+                    // otherwise we need to draw one animal from those with second highest energy
                     firstAnimal = reproducingAnimals.get(0);
-                    drawableAnimals = listOfAnimals.stream().filter(animal -> animal.getEnergy() == secondHighestEnergy).collect(Collectors.toList());
+                    drawableAnimals = listOfAnimals.stream()
+                            .filter(animal -> animal.getEnergy() == secondHighestEnergy)
+                            .collect(Collectors.toList());
                     secondAnimal = reproducingAnimals.get(this.generator.nextInt(drawableAnimals.size()));
                 }
 
                 List<Vector2d> freePositions = new ArrayList<>();
 
+                // search for a free position adjacent to the current one
                 for (int i = -1; i <= 1; i++) {
                     for (int j = -1; j <= 1; j++) {
                         if (i != 0 || j != 0) {
@@ -180,6 +215,7 @@ public class SimulationEngine implements IEngine {
 
                 Vector2d childPosition;
 
+                // if no positions are free, choose random adjacent one
                 if (freePositions.size() == 0) {
                     int x = this.generator.nextInt(2) - 1;
                     int y;
@@ -188,15 +224,16 @@ public class SimulationEngine implements IEngine {
                     } while (x == 0 && y == 0);
                     childPosition = this.map.wrapPositions(new Vector2d(x, y));
                 } else {
+                    //otherwise pick one of free positions
                     childPosition = freePositions.get(this.generator.nextInt(freePositions.size()));
                 }
                 Animal child = new Animal(this.map, childPosition, firstAnimal, secondAnimal);
+                this.stats.animalsReproduced(firstAnimal, secondAnimal, child);
                 animalsToPlace.add(child);
             }
         });
 
         for (Animal animal : animalsToPlace) {
-            System.out.println("New Animal at: " + animal.getPosition());
             this.map.place(animal);
             this.animalMap.put(animal.getPosition(), animal);
         }

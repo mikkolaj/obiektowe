@@ -22,18 +22,6 @@ public enum MapDirection {
             case NORTH_WEST -> "^\\";
         };
     }
-    public String toFilename() {
-        return switch (this) {
-            case NORTH -> "n";
-            case NORTH_EAST -> "ne";
-            case EAST -> "e";
-            case SOUTH_EAST -> "se";
-            case SOUTH -> "s";
-            case SOUTH_WEST -> "sw";
-            case WEST -> "w";
-            case NORTH_WEST -> "nw";
-        };
-    }
 
     public MapDirection next() {
         return switch (this) {

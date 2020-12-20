@@ -11,7 +11,6 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
     private final ArrayList<IFieldChangeObserver> observers = new ArrayList<>();
     private final Map<Vector2d, Grass> grassMap = new HashMap<>();
     private final Multimap<Vector2d, Animal> animalMap = ArrayListMultimap.create();
-    private final OldMapVisualizer oldMapVisualizer = new OldMapVisualizer(this);
     private final Vector2d mapLowerLeft;
     private final Vector2d mapUpperRight;
     private final Vector2d jungleLowerLeft;
@@ -41,6 +40,8 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
         int upperY = height / 2;
         if (width % 2 == 0) {
             upperX -= 1;
+        }
+        if (height % 2 == 0) {
             upperY -= 1;
         }
         Vector2d upperRight = new Vector2d(upperX, upperY);
@@ -97,12 +98,12 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
     public Object objectAt(Vector2d position) {
         List<Animal> animals = this.animalMap.get(position)
                 .stream()
-                .sorted(Comparator.comparingInt(Animal::getEnergy))
+                .sorted(Comparator.comparingInt(Animal::getEnergy).reversed())
                 .collect(Collectors.toList());
         return !animals.isEmpty() ? animals.get(0) : getGrass(position);
     }
 
-    public boolean GrassPresentAt(Vector2d position) {
+    public boolean grassPresentAt(Vector2d position) {
         return this.grassMap.containsKey(position);
     }
 
@@ -116,23 +117,21 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
         this.fieldChanged(position);
     }
 
-    public int getNumberOfGrass() {
+    public int getNumberOfGrassPatches() {
         return grassMap.size();
     }
 
+    // map is a torus, we can move everywhere
     public boolean canMoveTo(Vector2d position) {
         return true;
     }
 
-    public String toString() {
-        return this.oldMapVisualizer.draw(this.mapLowerLeft, this.mapUpperRight);
-    }
-
+    // determine if it is possible to place grass in either of biomes
     public void findFreeSpots() {
         this.freeSpotJungle = false;
         this.freeSpotSavannah = false;
-        for (int i = this.mapLowerLeft.x; i < this.mapUpperRight.x; i++) {
-            for (int j = this.mapLowerLeft.y; j < this.mapUpperRight.y; j++) {
+        for (int i = this.mapLowerLeft.x; i <= this.mapUpperRight.x; i++) {
+            for (int j = this.mapLowerLeft.y; j <= this.mapUpperRight.y; j++) {
                 Vector2d position = new Vector2d(i, j);
                 if (this.animalMap.get(position).size() == 0 && this.grassMap.get(position) == null) {
                     if (this.insideJungle(position)) {
@@ -145,6 +144,8 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
         }
     }
 
+    // wrap around positions of our map, animals can move one tile at a time, so the
+    // implementation is simple
     public Vector2d wrapPositions(Vector2d position) {
         int x = this.wrapPosition(position.x, mapUpperRight.x, mapLowerLeft.x);
         int y = this.wrapPosition(position.y, mapUpperRight.y, mapLowerLeft.y);
@@ -160,6 +161,7 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
         return position;
     }
 
+    // we need to inform our map about animals changing their positions
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition) {
         if (!oldPosition.equals(newPosition)) {
             Collection<Animal> listOfAnimals = this.animalMap.get(oldPosition);
@@ -187,7 +189,8 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
         this.observers.remove(observer);
     }
 
-    private void fieldChanged(Vector2d position) {
+    // inform observers of the map about a change on each field
+    public void fieldChanged(Vector2d position) {
         for (IFieldChangeObserver observer : this.observers) {
             observer.fieldChanged(position);
         }

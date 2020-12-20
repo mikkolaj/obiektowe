@@ -1,59 +1,47 @@
 package agh.cs.lab1;
 
-import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Text;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.net.URL;
-
 
 public class MapTile extends StackPane {
-    private Rectangle border;
-    private Text textBox = new Text();
+    private final Rectangle border;
 
-    public MapTile(int x, int y, int tile_size) {
-        this.border = new Rectangle(tile_size - 2, tile_size - 2);
+    public MapTile(int x, int y, int tileSize) {
+        this.border = new Rectangle(tileSize, tileSize);
 
         this.border.setStroke(Color.LIGHTGRAY);
         this.border.setFill(Color.LAVENDER);
-        this.textBox.setFill(Color.LAVENDER);
-        this.getChildren().addAll(border, textBox);
+        this.getChildren().add(border);
         this.setBackground(new Background(new BackgroundFill(Color.LAVENDER, null, null)));
 
-        setTranslateX(x * tile_size);
-        setTranslateY(y * tile_size);
+        setTranslateX(x * tileSize);
+        setTranslateY(y * tileSize);
     }
 
-    public void setText(String text) {
-        this.textBox.setText(text);
-    }
-
-    public void setBckg(Object mapObject) {
+    public void setCorrectBackground(Object mapObject, int initialEnergy) {
         if (mapObject == null) {
             this.border.setFill(Color.LAVENDER);
             return;
         }
-        String urlString;
+
+        // set background color relative to the energy of an animal, the darker it is
+        // the closer the animal is to death
         if (mapObject instanceof Animal) {
-            urlString = "./icons/" + ((Animal) mapObject).getOrientation().toFilename() + ".png";
+            double relativeEnergy = 1.0 * ((Animal) mapObject).getEnergy() / initialEnergy;
+            relativeEnergy = Math.min(relativeEnergy, 1.0);
+            this.border.setFill(Color.color(relativeEnergy, 166.0 * relativeEnergy / 255.0, 0));
         } else {
-            urlString = "./icons/grass.png";
-        }
-        try {
-//            System.out.println(urlString);
-            URL url = getClass().getResource(urlString);
-            String currentDirectory = System.getProperty("user.dir");
-      System.out.println("The current working directory is " + currentDirectory);
-            this.border.setFill(new ImagePattern(new Image(new FileInputStream(url.getPath()))));
-        } catch (FileNotFoundException ex) {
-            System.out.println(ex);
+            // grass is green
+            this.border.setFill(Color.GREEN);
         }
 
     }
+
+    public void setGivenBackground(Color color) {
+        this.border.setFill(color);
+    }
+
+
 }
 
