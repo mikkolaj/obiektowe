@@ -17,35 +17,33 @@ public class GrassField implements IWorldMap, IPositionChangeObserver {
     private final Vector2d jungleUpperRight;
     private final Vector2d jungleSize;
     private final Vector2d mapSize;
-    public final int moveEnergy;
     private boolean freeSpotJungle = true;
     private boolean freeSpotSavannah = true;
 
-    public GrassField(int width, int height, double jungleRatio, int moveEnergy) {
-        Vector2d[] corners = setCorners(width, height);
-        Vector2d offset = new Vector2d(width / 2, height / 2);
-        this.mapLowerLeft = corners[0].add(offset);
-        this.mapUpperRight = corners[1].add(offset);
-        corners = setCorners((int) Math.floor(width * jungleRatio), (int) Math.floor(height * jungleRatio));
-        this.jungleLowerLeft = corners[0].add(offset);
-        this.jungleUpperRight = corners[1].add(offset);
-        this.jungleSize = jungleUpperRight.subtract(jungleLowerLeft).add(new Vector2d(1, 1));
-        this.mapSize = mapUpperRight.subtract(mapLowerLeft).add(new Vector2d(1, 1));
-        this.moveEnergy = moveEnergy;
+    public GrassField(int width, int height, double jungleRatio) {
+        this.mapLowerLeft = new Vector2d(0, 0);
+        this.mapUpperRight = new Vector2d(width - 1, height - 1);
+        int jWidth = (int) Math.floor(width * jungleRatio);
+        int jHeight = (int) Math.floor(height * jungleRatio);
+        Vector2d[] offsets = findOffsets(jWidth, jHeight);
+        this.jungleLowerLeft = (new Vector2d(width/2, height/2)).subtract(offsets[0]);
+        this.jungleUpperRight = (new Vector2d(width/2 , height/2)).add(offsets[1]);
+        this.jungleSize = new Vector2d(jWidth, jHeight);
+        this.mapSize = new Vector2d(width, height);
     }
 
-    private Vector2d[] setCorners(int width, int height) {
-        Vector2d lowerLeft = new Vector2d(-width / 2, -height / 2);
-        int upperX = width / 2;
-        int upperY = height / 2;
-        if (width % 2 == 0) {
-            upperX -= 1;
+    public Vector2d[] findOffsets(int jWidth, int jHeight) {
+        Vector2d offsetLower = new Vector2d(jWidth/2, jHeight/2);
+        int x = jWidth/2;
+        int y = jHeight/2;
+        if (jWidth % 2 == 0) {
+            x -= 1;
         }
-        if (height % 2 == 0) {
-            upperY -= 1;
+        if (jHeight % 2 == 0) {
+            y -= 1;
         }
-        Vector2d upperRight = new Vector2d(upperX, upperY);
-        return new Vector2d[]{lowerLeft, upperRight};
+        Vector2d offsetUpper = new Vector2d(x, y);
+        return new Vector2d[]{offsetLower, offsetUpper};
     }
 
     public boolean place(Animal animal) {

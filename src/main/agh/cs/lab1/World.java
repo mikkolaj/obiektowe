@@ -20,11 +20,11 @@ public class World extends Application {
         try (Reader reader = new FileReader("./data/parameters.json")) {
             JSONObject jsonObject = (JSONObject) parser.parse(reader);
 
-            runSimulation(primaryStage, jsonObject);
+            runSimulation(primaryStage, jsonObject, 0);
 
             for (int i = 0; i < Math.toIntExact((long) jsonObject.get("numberOfSimulations")) - 1; i++) {
                 Stage newStage = new Stage();
-                runSimulation(newStage, jsonObject);
+                runSimulation(newStage, jsonObject, i + 1);
             }
         } catch (IllegalArgumentException | IOException | ParseException ex) {
             ex.printStackTrace();
@@ -33,13 +33,13 @@ public class World extends Application {
         }
     }
 
-    private void runSimulation(Stage primaryStage, JSONObject jsonObject) {
+    private void runSimulation(Stage primaryStage, JSONObject jsonObject, int simNumber) {
         GrassField map = new GrassField(Math.toIntExact((long) jsonObject.get("width")), Math.toIntExact((long) jsonObject.get("height")),
-                (double) jsonObject.get("jungleRatio"), Math.toIntExact((long) jsonObject.get("moveEnergy")));
+                (double) jsonObject.get("jungleRatio"));
 
         IEngine engine = new SimulationEngine(primaryStage, map, Math.toIntExact((long) jsonObject.get("numberOfAnimals")),
                 Math.toIntExact((long) jsonObject.get("startEnergy")), Math.toIntExact((long) jsonObject.get("plantEnergy")),
-                Math.toIntExact((long) jsonObject.get("moveDelay")));
+                Math.toIntExact((long) jsonObject.get("moveDelay")), Math.toIntExact((long) jsonObject.get("moveEnergy")), simNumber);
         engine.run();
     }
 

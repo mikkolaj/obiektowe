@@ -18,15 +18,16 @@ public class SimulationEngine implements IEngine {
     private volatile boolean isPaused = false;
     private final SimulationVisualizer simulationVisualizer;
     private final int moveDelay;
+    private final int moveEnergy;
 
 
     public SimulationEngine(Stage primaryStage, GrassField map, int numberOfAnimals, int startEnergy, int plantEnergy,
-                            int moveDelay) {
+                            int moveDelay, int moveEnergy, int simNumber) {
         Vector2d mapSize = map.getMapSize();
 
         this.stats = new SimulationStatistics(this, map);
         this.simulationVisualizer = new SimulationVisualizer(primaryStage, this,
-                this.stats, map, mapSize.x, mapSize.y, startEnergy);
+                this.stats, map, mapSize.x, mapSize.y, startEnergy, simNumber);
 
         List<Vector2d> positions = this.drawInitialPositions(numberOfAnimals, mapSize);
 
@@ -41,6 +42,7 @@ public class SimulationEngine implements IEngine {
         this.moveDelay = moveDelay;
         this.startEnergy = startEnergy;
         this.plantEnergy = plantEnergy;
+        this.moveEnergy = moveEnergy;
     }
 
     @Override
@@ -57,6 +59,7 @@ public class SimulationEngine implements IEngine {
                 List<Animal> values = new ArrayList<>(this.animalMap.values());
                 for (Animal animal : values) {
                     Vector2d oldPos = animal.getPosition();
+                    animal.setEnergy(animal.getEnergy()-this.moveEnergy);
                     animal.move();
                     Vector2d newPos = animal.getPosition();
                     this.animalMap.remove(oldPos, animal);
@@ -112,7 +115,7 @@ public class SimulationEngine implements IEngine {
                     List<Animal> strongestAnimals = listOfAnimals.stream().filter(animal1 -> animal1.getEnergy() == strongestAnimal.getEnergy()).collect(Collectors.toList());
                     int energyPerAnimal = this.plantEnergy / strongestAnimals.size();
                     for (Animal animal : strongestAnimals) {
-                        animal.boostEnergy(energyPerAnimal);
+                        animal.setEnergy(animal.getEnergy() + energyPerAnimal);
                     }
                 }
             }

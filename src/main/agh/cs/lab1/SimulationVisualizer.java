@@ -14,7 +14,7 @@ public class SimulationVisualizer {
     private static final int STATS_WIDTH = 400;
 
     public SimulationVisualizer(Stage primaryStage, SimulationEngine simulationEngine, SimulationStatistics stats,
-                                GrassField map, int width, int height, int initialEnergy) {
+                                GrassField map, int width, int height, int initialEnergy, int simNumber) {
         Pane root = new Pane();
         root.setPrefSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -22,7 +22,7 @@ public class SimulationVisualizer {
 
         if (tileSize >= 3) {
             this.controlPanel = new ControlPanel(simulationEngine, stats, STATS_WIDTH,
-                    Math.max(height * tileSize + 1, 370), width * tileSize + 1, 0);
+                    Math.max(height * tileSize + 1, 370), width * tileSize + 1, 0, simNumber);
             MapVisualizer mapVisualizer = new MapVisualizer(map, simulationEngine, controlPanel,
                     stats, width, height, initialEnergy, tileSize);
             this.controlPanel.addMapVisualizer(mapVisualizer);
@@ -31,7 +31,7 @@ public class SimulationVisualizer {
         } else {
             // map is illegible, only stats and a message will be displayed
             this.controlPanel = new ControlPanel(simulationEngine, stats, STATS_WIDTH,
-                    WINDOW_HEIGHT, WINDOW_WIDTH - STATS_WIDTH, 0);
+                    WINDOW_HEIGHT, WINDOW_WIDTH - STATS_WIDTH, 0, simNumber);
             StackPane pane = new StackPane();
             Text text = new Text();
             text.setText("The map is too big to be displayed");

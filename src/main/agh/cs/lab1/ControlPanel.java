@@ -36,15 +36,18 @@ public class ControlPanel extends StackPane {
     private final Text numberOfChildren;
     private final Text numberOfDescendants;
     private final Text isDead;
+    private final int simNumber;
     private boolean observationInProgress = false;
 
-    public ControlPanel(SimulationEngine simulationEngine, SimulationStatistics stats, int width, int height, int baseX, int baseY) {
+    public ControlPanel(SimulationEngine simulationEngine, SimulationStatistics stats, int width, int height,
+                        int baseX, int baseY, int simNumber) {
         Button pause = new Button("Pause");
         Button start = new Button("Start");
         this.simulationEngine = simulationEngine;
         this.stats = stats;
-        this.setPrefSize(width, height);
+        this.simNumber = simNumber;
         this.height = height;
+        this.setPrefSize(width, height);
 
         pause.setTranslateX(160 - width / 2);
         pause.setTranslateY(30 - height / 2);
@@ -135,7 +138,7 @@ public class ControlPanel extends StackPane {
 
     private void onStatsSave() {
         this.pauseSimulation();
-        String path = ".\\data\\finalStats.txt";
+        String path = ".\\data\\finalStats" + this.simNumber + ".txt";
         this.stats.saveStats(path);
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Stats saved");

@@ -9,7 +9,7 @@ public class Animal {
     private int energy;
     private final List<Integer> genes = new ArrayList<>(GENOTYPE_LENGTH);
     private final ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
-    final private GrassField map;
+    private final GrassField map;
     private int daysLived = 0;
     private int children = 0;
 
@@ -108,7 +108,6 @@ public class Animal {
             this.daysLived += 1;
             Vector2d oldPos = this.position;
             this.position = newPos;
-            this.energy -= this.map.moveEnergy;
             this.positionChanged(oldPos, newPos);
         }
     }
@@ -139,9 +138,8 @@ public class Animal {
         return this.energy;
     }
 
-    public void boostEnergy(int value) {
-        if (value >= 0)
-            this.energy += value;
+    public void setEnergy(int value) {
+        this.energy = value;
     }
 
     public List<Integer> getGenes() {
