@@ -16,7 +16,7 @@ public class World extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        JSONParser parser = new JSONParser();
+        JSONParser parser = new JSONParser();   // czy wczytanie JSONa to główne zadanie tej klasy?
         try (Reader reader = new FileReader("./data/parameters.json")) {
             JSONObject jsonObject = (JSONObject) parser.parse(reader);
 

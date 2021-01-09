@@ -1,6 +1,6 @@
-package agh.cs.lab1;
+package agh.cs.lab1;    // przydałby się podział na pakiety
 
-import java.lang.*;
+import java.lang.*; // java.lang jest automatycznie importowane
 
 public class Vector2d {
     public final int x;

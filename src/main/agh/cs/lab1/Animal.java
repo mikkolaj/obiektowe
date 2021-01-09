@@ -14,7 +14,7 @@ public class Animal {
     private int children = 0;
 
     public Animal(GrassField map, Vector2d initialPosition, int startEnergy) {
-        Random generator = new Random();
+        Random generator = new Random();    // nowy obiekt co wywołanie
         this.orientation = MapDirection.NORTH;
         this.position = initialPosition;
         this.map = map;
@@ -28,7 +28,7 @@ public class Animal {
 
     // dwie grupy mają być losowane
     public Animal(GrassField map, Vector2d initialPosition, Animal strongerAnimal, Animal weakerAnimal) {
-        this.orientation = MapDirection.NORTH;
+        this.orientation = MapDirection.NORTH;  // kierunek miał być losowy
         this.position = initialPosition;
         this.map = map;
         this.setGenes(strongerAnimal.genes, weakerAnimal.genes);
@@ -143,10 +143,10 @@ public class Animal {
     }
 
     public List<Integer> getGenes() {
-        return this.genes;
+        return this.genes;  // zniszczona hermetyzacja
     }
 
-    public int getChildren() {
+    public int getChildren() {  // dodałbym Count do tej nazwy
         return this.children;
     }
 
